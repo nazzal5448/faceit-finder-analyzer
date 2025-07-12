@@ -30,6 +30,9 @@ def get_faceit_player(nickname_or_id):
     res = requests.get(url, headers=HEADERS)
     return res.json()
 
+@router.get("/")
+def home():
+    return {"message":"Faceit App is running!"}
 @router.get("/search/")
 def search_player(nickname: str):
     return get_faceit_player(nickname)

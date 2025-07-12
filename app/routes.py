@@ -12,6 +12,7 @@ API_KEY = os.getenv("FACEIT_API_KEY")
 BASE_URL = "https://open.faceit.com/data/v4"
 HEADERS = {"Authorization": f"Bearer {API_KEY}"}
 
+
 def extract_steam_id_from_url(url):
     match = re.search(r"steamcommunity\.com/id/([a-zA-Z0-9_]+)/?", url)
     if match:
@@ -121,8 +122,7 @@ def smurf_check(player_id: str):
 @router.get("/full-profile/")
 def full_profile(nickname_or_url: str):
     print("NICK:", nickname_or_url)
-    print("Api key": API_KEY)
-
+    print("Api:", API_KEY)
     player = get_faceit_player(nickname_or_url)
     print("DATA FROM FACEIT:", player)
     if not player or "player_id" not in player:

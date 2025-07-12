@@ -7,7 +7,7 @@ app = FastAPI(title="Faceit Finder Tool")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://faceitfinder.io", "https://faceitanalyser.net"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

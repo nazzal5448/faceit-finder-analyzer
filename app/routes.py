@@ -121,6 +121,7 @@ def smurf_check(player_id: str):
 @router.get("/full-profile/")
 def full_profile(nickname_or_url: str):
     print("NICK:", nickname_or_url)
+    print("Api key": API_KEY)
 
     player = get_faceit_player(nickname_or_url)
     print("DATA FROM FACEIT:", player)

@@ -120,7 +120,10 @@ def smurf_check(player_id: str):
 
 @router.get("/full-profile/")
 def full_profile(nickname_or_url: str):
+    print("NICK:", nickname_or_url)
+
     player = get_faceit_player(nickname_or_url)
+    print("DATA FROM FACEIT:", player)
     if not player or "player_id" not in player:
         return {"error": "Player not found."}
 

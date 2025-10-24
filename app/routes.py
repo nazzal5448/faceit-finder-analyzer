@@ -57,16 +57,138 @@ def get_player_bans(player_id: str):
     return res.json()
 
 @router.get("/player/{player_id}/history")
-def get_match_history(player_id: str, game: str, limit: int = 5):
+def get_match_history(player_id: str, game: str, limit: int = 50):
     url = f"{BASE_URL}/players/{player_id}/history?game={game}&limit={limit}"
     res = requests.get(url, headers=HEADERS)
     return res.json()
+
+@router.get("/search/players")
+def search_players(nickname: str, game: str = None, country: str = None, offset: int = 0, limit: int = 20):
+    """
+    Search for players based on their nickname.
+
+    Parameters:
+    - nickname: The nickname of the player on FACEIT (required).
+    - game: The game on FACEIT (optional).
+    - country: The country code (ISO 3166-1) for filtering (optional).
+    - offset: The starting position for pagination (default: 0).
+    - limit: The number of players to return (default: 20, max: 100).
+    """
+    url = f"{BASE_URL}/search/players"
+
+    # Adding query parameters if they exist
+    params = {
+        "nickname": nickname,
+        "game": game if game else None,
+        "country": country if country else None,
+        "offset": offset,
+        "limit": limit
+    }
+
+    # Remove None values from params
+    params = {key: value for key, value in params.items() if value is not None}
+
+    try:
+        # Sending request to Faceit API to search for players
+        res = requests.get(url, headers=HEADERS, params=params)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
+@router.get("/matches/{match_id}")
+def get_match_details(match_id: str):
+    """
+    Retrieve the details of a specific match.
+
+    Parameters:
+    - match_id: The ID of the match (required).
+    """
+    url = f"{BASE_URL}/matches/{match_id}"
+
+    try:
+        # Sending request to Faceit API to get the match details
+        res = requests.get(url, headers=HEADERS)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
 
 @router.get("/player/{player_id}/hubs")
 def get_player_hubs(player_id: str):
     url = f"{BASE_URL}/players/{player_id}/hubs"
     res = requests.get(url, headers=HEADERS)
     return res.json()
+
+@router.get("/hubs/{hub_id}")
+def get_hub_details(hub_id: str, expanded: list = None):
+    """
+    Retrieve the details of a specific hub.
+
+    Parameters:
+    - hub_id: The ID of the hub (required).
+    - expanded: Optional array of entities to expand ("organizer", "game").
+    """
+    url = f"{BASE_URL}/hubs/{hub_id}"
+
+    # Adding query parameters if they exist
+    params = {}
+    if expanded:
+        params["expanded"] = expanded
+
+    try:
+        # Sending request to Faceit API to get the hub details
+        res = requests.get(url, headers=HEADERS, params=params)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
+@router.get("/hubs/{hub_id}/rules")
+def get_hub_rules(hub_id: str):
+    """
+    Retrieve the rules for a specific hub.
+
+    Parameters:
+    - hub_id: The ID of the hub (required).
+    """
+    url = f"{BASE_URL}/hubs/{hub_id}/rules"
+
+    try:
+        # Sending request to Faceit API to get the rules for the hub
+        res = requests.get(url, headers=HEADERS)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
+@router.get("/hubs/{hub_id}/stats")
+def get_hub_statistics(hub_id: str, offset: int = 0, limit: int = 20):
+    """
+    Retrieve the statistics of a specific hub.
+
+    Parameters:
+    - hub_id: The ID of the hub (required).
+    - offset: The starting position for pagination (default: 0).
+    - limit: The number of items to return (default: 20, max: 100).
+    """
+    url = f"{BASE_URL}/hubs/{hub_id}/stats"
+
+    # Adding query parameters if they exist
+    params = {
+        "offset": offset,
+        "limit": limit
+    }
+
+    try:
+        # Sending request to Faceit API to get the hub statistics
+        res = requests.get(url, headers=HEADERS, params=params)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
 
 @router.get("/elo-level/{elo}")
 def get_elo_level(elo: int):
@@ -86,6 +208,172 @@ def get_elo_level(elo: int):
         if lower <= elo <= upper:
             return {"level": label}
     return {"level": "Unknown"}
+
+@router.get("/rankings/games/{game_id}/regions/{region}")
+def get_game_rankings(game_id: str, region: str, country: str = None, offset: int = 0, limit: int = 100):
+    """
+    Retrieve the global ranking of a game for a specific region.
+
+    Parameters:
+    - game_id: The ID of the game (required).
+    - region: The region for the ranking (required).
+    - country: Optional country code for filtering (ISO 3166-1).
+    - offset: The starting position for pagination (default: 0).
+    - limit: The number of rankings to return (default: 20, max: 100).
+    """
+    url = f"{BASE_URL}/rankings/games/{game_id}/regions/{region}"
+
+    # Adding query parameters if they exist
+    params = {
+        "country": country if country else None,
+        "offset": offset,
+        "limit": limit
+    }
+
+    # Remove None values from params
+    params = {key: value for key, value in params.items() if value is not None}
+
+    try:
+        # Sending request to Faceit API to get the rankings
+        res = requests.get(url, headers=HEADERS, params=params)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
+@router.get("/championships")
+def get_championships(game: str, type: str = "all", offset: int = 0, limit: int = 10):
+    """
+    Retrieve all championships for a specific game.
+
+    Parameters:
+    - game: The ID of the game (required).
+    - type: The type of matches to return (optional: "all", "upcoming", "ongoing", "past").
+    - offset: The starting position for pagination (default: 0).
+    - limit: The number of championships to return (default: 10, max: 10).
+    """
+    url = f"{BASE_URL}/championships"
+
+    # Adding query parameters
+    params = {
+        "game": game,
+        "type": type,
+        "offset": offset,
+        "limit": limit
+    }
+
+    try:
+        # Sending request to Faceit API to get the championships
+        res = requests.get(url, headers=HEADERS, params=params)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
+@router.get("/championships/{championship_id}")
+def get_championship_details(championship_id: str):
+    """
+    Retrieve detailed information about a specific championship.
+
+    Parameters:
+    - championship_id: The ID of the championship (required).
+    """
+    url = f"{BASE_URL}/championships/{championship_id}"
+
+    try:
+        # Sending request to Faceit API to get the championship details
+        res = requests.get(url, headers=HEADERS)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
+@router.get("/championships/{championship_id}/matches")
+def get_championship_matches(championship_id: str, type: str = "all", offset: int = 0, limit: int = 20):
+    """
+    Retrieve all matches of a specific championship.
+
+    Parameters:
+    - championship_id: The ID of the championship (required).
+    - type: The type of matches to return (optional: "all", "upcoming", "ongoing", "past").
+    - offset: The starting position for pagination (default: 0).
+    - limit: The number of matches to return (default: 20, max: 100).
+    """
+    url = f"{BASE_URL}/championships/{championship_id}/matches"
+
+    # Adding query parameters if they exist
+    params = {
+        "type": type,
+        "offset": offset,
+        "limit": limit
+    }
+
+    try:
+        # Sending request to Faceit API to get the matches
+        res = requests.get(url, headers=HEADERS, params=params)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
+@router.get("/leaderboards/championships/{championship_id}")
+def get_championship_leaderboards(championship_id: str, offset: int = 0, limit: int = 20):
+    """
+    Retrieve all leaderboards of a championship.
+
+    Parameters:
+    - championship_id: The ID of the championship (required).
+    - offset: The starting position for pagination (default: 0).
+    - limit: The number of leaderboards to return (default: 20, max: 100).
+    """
+    url = f"{BASE_URL}/leaderboards/championships/{championship_id}"
+
+    # Adding query parameters if they exist
+    params = {
+        "offset": offset,
+        "limit": limit
+    }
+
+    try:
+        # Sending request to Faceit API to get the leaderboards
+        res = requests.get(url, headers=HEADERS, params=params)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
+
+@router.get("/rankings/games/{game_id}/regions/{region}/players/{player_id}")
+def get_user_ranking(game_id: str, region: str, player_id: str, country: str = None, limit: int = 20):
+    """
+    Retrieve the position of a specific player in the global ranking of a game.
+
+    Parameters:
+    - game_id: The ID of the game (required).
+    - region: The region for the ranking (required).
+    - player_id: The player ID to retrieve their ranking (required).
+    - country: Optional country code for filtering (ISO 3166-1).
+    - limit: The number of items to return (default: 20, max: 100).
+    """
+    url = f"{BASE_URL}/rankings/games/{game_id}/regions/{region}/players/{player_id}"
+
+    # Adding query parameters if they exist
+    params = {
+        "country": country if country else None,
+        "limit": limit
+    }
+
+    # Remove None values from params
+    params = {key: value for key, value in params.items() if value is not None}
+
+    try:
+        # Sending request to Faceit API to get the player's ranking
+        res = requests.get(url, headers=HEADERS, params=params)
+        res.raise_for_status()  # Will raise HTTPError for bad responses
+        return res.json()  # Returning the JSON response from Faceit API
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}  # Returning error message if request fails
+
 
 @router.post("/bulk/")
 def bulk_lookup(ids: List[str] = Query(...)):
@@ -116,7 +404,7 @@ def smurf_check(player_id: str):
     if matches < 30 and kd > 1.5:
         flags.append("High KD with low matches — Possible smurf")
     if hs > 50:
-        flags.append("Unusually high headshot percentage")
+        flags.append("high headshot percentage")
     return {"flags": flags, "kd": kd, "hs": hs, "matches": matches}
 
 @router.get("/full-profile/")

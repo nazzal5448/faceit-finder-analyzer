@@ -120,30 +120,29 @@ def get_player_hubs(player_id: str):
     url = f"{BASE_URL}/players/{player_id}/hubs"
     res = requests.get(url, headers=HEADERS)
     return res.json()
-
 @router.get("/hubs/{hub_id}")
-def get_hub_details(hub_id: str, expanded: list = None):
+def get_hub_details(hub_id: str, expanded: str = None):
     """
     Retrieve the details of a specific hub.
 
     Parameters:
     - hub_id: The ID of the hub (required).
-    - expanded: Optional array of entities to expand ("organizer", "game").
+    - expanded: Optional comma-separated list of entities to expand ("organizer,game").
     """
     url = f"{BASE_URL}/hubs/{hub_id}"
 
-    # Adding query parameters if they exist
     params = {}
     if expanded:
+        # Ensure it's in the right format (comma-separated string)
         params["expanded"] = expanded
 
     try:
-        # Sending request to Faceit API to get the hub details
         res = requests.get(url, headers=HEADERS, params=params)
-        res.raise_for_status()  # Will raise HTTPError for bad responses
-        return res.json()  # Returning the JSON response from Faceit API
+        res.raise_for_status()
+        return res.json()
     except requests.exceptions.RequestException as e:
-        return {"error": str(e)}  # Returning error message if request fails
+        return {"error": str(e)}
+
 
 @router.get("/hubs/{hub_id}/rules")
 def get_hub_rules(hub_id: str):
@@ -167,27 +166,26 @@ def get_hub_rules(hub_id: str):
 def get_hub_statistics(hub_id: str, offset: int = 0, limit: int = 20):
     """
     Retrieve the statistics of a specific hub.
-
-    Parameters:
-    - hub_id: The ID of the hub (required).
-    - offset: The starting position for pagination (default: 0).
-    - limit: The number of items to return (default: 20, max: 100).
     """
-    url = f"{BASE_URL}/hubs/{hub_id}/stats"
 
-    # Adding query parameters if they exist
-    params = {
-        "offset": offset,
-        "limit": limit
-    }
+    url = f"{BASE_URL}/hubs/{hub_id}/stats"
+    params = {"offset": offset, "limit": limit}
 
     try:
-        # Sending request to Faceit API to get the hub statistics
         res = requests.get(url, headers=HEADERS, params=params)
-        res.raise_for_status()  # Will raise HTTPError for bad responses
-        return res.json()  # Returning the JSON response from Faceit API
+
+        if res.status_code == 404:
+            return {
+                "error": "No statistics found for this hub or the hub ID is invalid.",
+                "hub_id": hub_id,
+            }
+
+        res.raise_for_status()
+        return res.json()
+
     except requests.exceptions.RequestException as e:
-        return {"error": str(e)}  # Returning error message if request fails
+        return {"error": str(e)}
+
 
 
 @router.get("/elo-level/{elo}")
@@ -341,6 +339,37 @@ def get_championship_leaderboards(championship_id: str, offset: int = 0, limit: 
         return res.json()  # Returning the JSON response from Faceit API
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}  # Returning error message if request fails
+    
+@router.get("/leaderboards/{leaderboard_id}")
+def get_leaderboard_ranking(leaderboard_id: str, offset: int = 0, limit: int = 20):
+    """
+    Retrieve ranking from a specific leaderboard ID.
+
+    Parameters:
+    - leaderboard_id: The ID of the leaderboard (required).
+    - offset: The starting position for pagination (default: 0).
+    - limit: The number of items to return (default: 20, max: 100).
+    """
+
+    url = f"{BASE_URL}/leaderboards/{leaderboard_id}"
+    params = {"offset": offset, "limit": limit}
+
+    try:
+        res = requests.get(url, headers=HEADERS, params=params)
+
+        # Handle 404 (leaderboard not found)
+        if res.status_code == 404:
+            return {
+                "error": "Leaderboard not found or invalid leaderboard_id.",
+                "leaderboard_id": leaderboard_id,
+            }
+
+        res.raise_for_status()
+        return res.json()
+
+    except requests.exceptions.RequestException as e:
+        return {"error": str(e)}
+
 
 
 @router.get("/rankings/games/{game_id}/regions/{region}/players/{player_id}")
